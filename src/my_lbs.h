@@ -1,116 +1,83 @@
-/*
- * Copyright (c) 2018 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+/**
+ * @file
+ * LED Button Service
  */
 
-#ifndef BT_LBS_H_
-#define BT_LBS_H_
-
-/**@file
- * @defgroup bt_lbs LED Button Service API
- * @{
- * @brief API for the LED Button Service (LBS).
- */
+#ifndef MY_LBS_H_
+#define MY_LBS_H_
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
-#include <zephyr/types.h>
+#include <stdint.h>
 
-/** @brief LBS Service UUID. */
-#define BT_UUID_LBS_VAL BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+/*
+ * UUID
+ */
 
-/** @brief Button Characteristic UUID. */
-#define BT_UUID_LBS_BUTTON_VAL                                                                     \
-	BT_UUID_128_ENCODE(0x00001524, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+/// @brief LBS Service UUID
+#define UUID_LBS_VAL \
+    BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
 
-/** @brief LED Characteristic UUID. */
-#define BT_UUID_LBS_LED_VAL BT_UUID_128_ENCODE(0x00001525, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
 
-/* STEP 11.1 - Assign a UUID to the MYSENSOR characteristic */
-/** @brief LED Characteristic UUID. */
-#define BT_UUID_LBS_MYSENSOR_VAL                                                                   \
-	BT_UUID_128_ENCODE(0x00001526, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+/*
+ * Types
+ */
 
-#define BT_UUID_LBS BT_UUID_DECLARE_128(BT_UUID_LBS_VAL)
-#define BT_UUID_LBS_BUTTON BT_UUID_DECLARE_128(BT_UUID_LBS_BUTTON_VAL)
-#define BT_UUID_LBS_LED BT_UUID_DECLARE_128(BT_UUID_LBS_LED_VAL)
-/* STEP 11.2 - Convert the array to a generic UUID */
-#define BT_UUID_LBS_MYSENSOR BT_UUID_DECLARE_128(BT_UUID_LBS_MYSENSOR_VAL)
 
-/** @brief Callback type for when an LED state change is received. */
-typedef void (*led_cb_t)(const bool led_state);
+/// @brief Read BUTTON Characteristic callback data
+// TODO: Modifying members
+struct lbs_button_status {
+    // TODO: add your parameters...
 
-/** @brief Callback type for when the button state is pulled. */
-typedef bool (*button_cb_t)(void);
-
-/** @brief Callback struct used by the LBS Service. */
-struct my_lbs_cb {
-	/** LED state change callback. */
-	led_cb_t led_cb;
-	/** Button read callback. */
-	button_cb_t button_cb;
+    // serialized data for Read request
+    uint8_t serialized[1];
 };
 
-/** @brief Initialize the LBS Service.
- *
- * This function registers application callback functions with the My LBS
- * Service
- *
- * @param[in] callbacks Struct containing pointers to callback functions
- *			used by the service. This pointer can be NULL
- *			if no callback functions are defined.
- *
- *
- * @retval 0 If the operation was successful.
- *           Otherwise, a (negative) error code is returned.
- */
-int my_lbs_init(struct my_lbs_cb *callbacks);
+/// @brief Read callback type for BUTTON Characteristic.
+// TODO: Modifying parameters
+typedef int (*button_read_cb_t)(const void *data, uint16_t len, uint16_t offset, struct lbs_button_status *newState);
 
-/** @brief Send the button state as indication.
- *
- * This function sends a binary state, typically the state of a
- * button, to all connected peers.
- *
- * @param[in] button_state The state of the button.
- *
- * @retval 0 If the operation was successful.
- *           Otherwise, a (negative) error code is returned.
- */
-int my_lbs_send_button_state_indicate(bool button_state);
+/// @brief Write callback type for LED Characteristic.
+// TODO: Modifying parameters
+typedef int (*led_write_cb_t)(const void *data, uint16_t len, uint16_t offset);
 
-/** @brief Send the button state as notification.
- *
- * This function sends a binary state, typically the state of a
- * button, to all connected peers.
- *
- * @param[in] button_state The state of the button.
- *
- * @retval 0 If the operation was successful.
- *           Otherwise, a (negative) error code is returned.
- */
-int my_lbs_send_button_state_notify(bool button_state);
 
-/** @brief Send the sensor value as notification.
- *
- * This function sends an uint32_t  value, typically the value
- * of a simulated sensor to all connected peers.
- *
- * @param[in] sensor_value The value of the simulated sensor.
- *
- * @retval 0 If the operation was successful.
- *           Otherwise, a (negative) error code is returned.
+/// @brief Read MYSENSOR Characteristic callback data
+// TODO: Modifying members
+struct lbs_mysensor_status {
+    // TODO: add your parameters...
+
+    // serialized data for Read request
+    uint8_t serialized[4];
+};
+
+/// @brief Callback struct used by the LBS Service.
+struct lbs_cb {
+    button_read_cb_t button_read_cb;
+    led_write_cb_t led_write_cb;
+};
+
+
+/*
+ * Functions
  */
-int my_lbs_send_sensor_notify(uint32_t sensor_value);
+
+/// @brief Initialize the LBS Service.
+int lbs_init(struct lbs_cb *callbacks);
+
+/// @brief lbs_send_button_indicate sends the value by indication through button characteristic.
+// TODO: Modifying parameters
+int lbs_send_button_indicate(const uint8_t *data, uint16_t len);
+
+/// @brief lbs_send_mysensor_notify sends the value by notification through mysensor characteristic.
+// TODO: Modifying parameters
+int lbs_send_mysensor_notify(const uint8_t *data, uint16_t len);
+
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-/**
- * @}
- */
-
-#endif /* BT_LBS_H_ */
+#endif // MY_LBS_H_

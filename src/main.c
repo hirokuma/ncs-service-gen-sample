@@ -20,7 +20,7 @@ static struct bt_le_adv_param *adv_param = BT_LE_ADV_PARAM(
 	801, /* Max Advertising Interval 500.625ms (801*0.625ms) */
 	NULL); /* Set to NULL for undirected advertising */
 
-LOG_MODULE_REGISTER(Lesson4_Exercise2, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(Lesson4_Exercise2, LOG_LEVEL_DBG);
 
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
@@ -47,7 +47,7 @@ static const struct bt_data ad[] = {
 };
 
 static const struct bt_data sd[] = {
-	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_LBS_VAL),
+	BT_DATA_BYTES(BT_DATA_UUID128_ALL, UUID_LBS_VAL),
 };
 
 /* STEP 16 - Define a function to simulate the data */
@@ -58,14 +58,18 @@ static void simulate_data(void)
 		app_sensor_value = 100;
 	}
 }
-static void app_led_cb(bool led_state)
+static int app_led_cb(const void *buf, uint16_t len, uint16_t offset)
 {
+	const uint8_t *data = (const uint8_t *)buf;
+	int led_state = data[0];
 	dk_set_led(USER_LED, led_state);
+	return 0;
 }
 
-static bool app_button_cb(void)
+static int app_button_cb(const void *data, uint16_t len, uint16_t offset, struct lbs_button_status *newState)
 {
-	return app_button_state;
+	newState->serialized[0] = app_button_state ? 0x01 : 0x00;
+	return 0;
 }
 
 /* STEP 18.1 - Define the thread function  */
@@ -75,23 +79,27 @@ void send_data_thread(void)
 		/* Simulate data */
 		simulate_data();
 		/* Send notification, the function sends notifications only if a client is subscribed */
-		my_lbs_send_sensor_notify(app_sensor_value);
+		uint8_t val = (uint8_t)app_sensor_value;
+		int ret = lbs_send_mysensor_notify(&val, 1);
+		if (ret < 0) {
+			LOG_ERR("fail send mysensor notify: %d", ret);
+		}
 
 		k_sleep(K_MSEC(NOTIFY_INTERVAL));
 	}
 }
 
-static struct my_lbs_cb app_callbacks = {
-	.led_cb = app_led_cb,
-	.button_cb = app_button_cb,
+static struct lbs_cb app_callbacks = {
+	.led_write_cb = app_led_cb,
+	.button_read_cb = app_button_cb,
 };
 
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
 	if (has_changed & USER_BUTTON) {
-		uint32_t user_button_state = button_state & USER_BUTTON;
+		uint8_t user_button_state = button_state & USER_BUTTON;
 		/* STEP 6 - Send indication on a button press */
-		my_lbs_send_button_state_indicate(user_button_state);
+		lbs_send_button_indicate(&user_button_state, 1);
 		app_button_state = user_button_state ? true : false;
 	}
 }
@@ -157,7 +165,7 @@ int main(void)
 	}
 	bt_conn_cb_register(&connection_callbacks);
 
-	err = my_lbs_init(&app_callbacks);
+	err = lbs_init(&app_callbacks);
 	if (err) {
 		printk("Failed to init LBS (err:%d)\n", err);
 		return -1;
