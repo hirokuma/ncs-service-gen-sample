@@ -50,7 +50,7 @@ struct lbs_mysensor_status {
     // TODO: add your parameters...
 
     // serialized data for Read request
-    uint8_t serialized[1];
+    uint8_t serialized[4];
 };
 
 /// @brief Callback struct used by the LBS Service.

@@ -20,7 +20,7 @@
 
 #include "my_lbs.h"
 
-LOG_MODULE_REGISTER(LBS_Service, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(LBS_Service, LOG_LEVEL_DBG);
 
 /*
  * UUID
@@ -69,6 +69,7 @@ static struct lbs_cb lbs_cb;
 static void button_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 {
     indicate_button_enabled = (value == BT_GATT_CCC_INDICATE);
+    LOG_DBG("BUTTON indication flag: %d", indicate_button_enabled);
 }
 
 static void button_indicate_callback(struct bt_conn *conn, struct bt_gatt_indicate_params *params, uint8_t err)
@@ -82,6 +83,7 @@ static void button_indicate_callback(struct bt_conn *conn, struct bt_gatt_indica
 static void mysensor_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 {
     notify_mysensor_enabled = (value == BT_GATT_CCC_NOTIFY);
+    LOG_DBG("MYSENSOR notification flag: %d", notify_mysensor_enabled);
 }
 
 /**
@@ -97,13 +99,13 @@ static ssize_t write_led(
 {
 	LOG_DBG("Attribute write led, handle: %u, conn: %p", attr->handle, (const void *)conn);
 
-    // TODO: check len
+    // TODO: Check length
     if (len != 1) {
         LOG_ERR("Write led: Incorrect data length(%u)", len);
         return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
     }
 
-    // TODO: check offset
+    // TODO: Check offset
     if (offset != 0) {
         LOG_ERR("Write led: Incorrect data offset(%u)", offset);
         return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
@@ -114,7 +116,7 @@ static ssize_t write_led(
         int ret = lbs_cb.led_write_cb(buf, len, offset);
         if (ret != 0) {
             LOG_ERR("Write led: callback error happen: %d", ret);
-            return ret;
+            return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
         }
     }
 
@@ -139,10 +141,10 @@ static ssize_t read_button(
         int ret = lbs_cb.button_read_cb(buf, len, offset, &button_state);
         if (ret != 0) {
             LOG_ERR("Read button: callback error happen: %d", ret);
-            return (ssize_t)ret;
+            return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
         }
         return bt_gatt_attr_read(
-            conn, attr, buf, len, offset, &button_state, sizeof(&button_state));
+            conn, attr, buf, len, offset, button_state.serialized, sizeof(button_state.serialized));
     }
 
     return 0;
@@ -222,7 +224,10 @@ BT_GATT_SERVICE_DEFINE(
 int lbs_init(struct lbs_cb *callbacks)
 {
     lbs_cb = *callbacks;
-    return -ENOSYS;
+
+    // TODO: add your code
+
+    return 0;
 }
 
 /// @brief lbs_send_button_indicate sends the value by indication through button characteristic.
@@ -236,11 +241,15 @@ int lbs_send_button_indicate(const uint8_t *data, uint16_t len)
 
     // TODO: Modify
     indicate_button_params.attr = &lbs_svc.attrs[2];
-    indicate_button_params.func = NULL;
+    indicate_button_params.func = button_indicate_callback;
     indicate_button_params.destroy = NULL;
-    indicate_button_params.data = &button_state.serialized;
-    indicate_button_params.len = sizeof(button_state.serialized);
-    return bt_gatt_indicate(NULL, &indicate_button_params);
+    indicate_button_params.data = data;
+    indicate_button_params.len = len;
+    int ret = bt_gatt_indicate(NULL, &indicate_button_params);
+    if (ret != 0) {
+        LOG_ERR("lbs_send_button_indicate: fail bt_gatt_indicate(ret=%d).", ret);
+    }
+    return ret;
 }
 /// @brief lbs_send_mysensor_notify sends the value by notification through mysensor characteristic.
 // TODO: Modifying parameters
@@ -252,10 +261,14 @@ int lbs_send_mysensor_notify(const uint8_t *data, uint16_t len)
     }
 
     // TODO: Modify
-    return bt_gatt_notify(
+    int ret = bt_gatt_notify(
         NULL,
         &lbs_svc.attrs[7],
-        &mysensor_state.serialized,
-        sizeof(mysensor_state.serialized));
+        data,
+        len);
+    if (ret != 0) {
+        LOG_ERR("lbs_send_mysensor_notify: fail bt_gatt_notify(ret=%d).", ret);
+    }
+    return ret;
 }
 
