@@ -51,10 +51,6 @@ static struct lbs_button_status button_state;
 static bool indicate_button_enabled;
 static struct bt_gatt_indicate_params indicate_button_params;
 
-/// @brief LED Characteristic read status
-// TODO: Modify
-static struct lbs_led_status led_state;
-
 
 /// @brief MYSENSOR Characteristic read status
 // TODO: Modify
@@ -152,33 +148,6 @@ static ssize_t read_button(
     return 0;
 }
 
-/**
- * Callback application function triggered by reading LED Characteristic.
- */
-static ssize_t read_led(
-    struct bt_conn *conn,
-    const struct bt_gatt_attr *attr,
-    void *buf,
-    uint16_t len,
-    uint16_t offset)
-{
-    // TODO: Modify data
-    LOG_DBG("Attribute read led, handle: %u, conn: %p", attr->handle, (const void *)conn);
-
-    // TODO: Modify callback
-    if (lbs_cb.led_read_cb) {
-        int ret = lbs_cb.led_read_cb(buf, len, offset, &led_state);
-        if (ret != 0) {
-            LOG_ERR("Read led: callback error happen: %d", ret);
-            return (ssize_t)ret;
-        }
-        return bt_gatt_attr_read(
-            conn, attr, buf, len, offset, &led_state, sizeof(&led_state));
-    }
-
-    return 0;
-}
-
 // LBS Service Declaration
 BT_GATT_SERVICE_DEFINE(
     lbs_svc,
@@ -211,15 +180,15 @@ BT_GATT_SERVICE_DEFINE(
         // UUID
         UUID_LBS_LED,
         // Properties
-        BT_GATT_CHRC_WRITE | BT_GATT_CHRC_READ,
+        BT_GATT_CHRC_WRITE,
         // Permissions
-        BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
+        BT_GATT_PERM_WRITE,
         // Characteristic Attribute read callback
-        read_led,
+        NULL,
         // Characteristic Attribute write callback
         write_led,
         // Characteristic Attribute user data(TODO: modify)
-        led_state.serialized
+        NULL
     ),
 
     // MYSENSOR Characteristic

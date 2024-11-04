@@ -44,20 +44,6 @@ typedef int (*button_read_cb_t)(const void *data, uint16_t len, uint16_t offset,
 typedef int (*led_write_cb_t)(const void *data, uint16_t len, uint16_t offset);
 
 
-/// @brief Read LED Characteristic callback data
-// TODO: Modifying members
-struct lbs_led_status {
-    // TODO: add your parameters...
-
-    // serialized data for Read request
-    uint8_t serialized[1];
-};
-
-/// @brief Read callback type for LED Characteristic.
-// TODO: Modifying parameters
-typedef int (*led_read_cb_t)(const void *data, uint16_t len, uint16_t offset, struct lbs_led_status *newState);
-
-
 /// @brief Read MYSENSOR Characteristic callback data
 // TODO: Modifying members
 struct lbs_mysensor_status {
@@ -71,7 +57,6 @@ struct lbs_mysensor_status {
 struct lbs_cb {
     button_read_cb_t button_read_cb;
     led_write_cb_t led_write_cb;
-    led_read_cb_t led_read_cb;
 };
 
 
