@@ -1,6 +1,6 @@
 /**
- * @file
- * LED Button Service
+ * @file my_lbs.h
+ * @brief LED Button Service
  */
 
 #ifndef MY_LBS_H_
@@ -11,6 +11,8 @@ extern "C" {
 #endif // __cplusplus
 
 #include <stdint.h>
+
+#include <zephyr/bluetooth/uuid.h>
 
 /*
  * UUID

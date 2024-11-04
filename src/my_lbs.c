@@ -1,6 +1,6 @@
 /**
- * @file
- * LED Button Service
+ * @file my_lbs.c
+ * @brief LED Button Service
  */
 
 #include <stddef.h>
@@ -51,10 +51,6 @@ static struct lbs_button_status button_state;
 static bool indicate_button_enabled;
 static struct bt_gatt_indicate_params indicate_button_params;
 
-
-/// @brief MYSENSOR Characteristic read status
-// TODO: Modify
-static struct lbs_mysensor_status mysensor_state;
 /// @brief MYSENSOR Characteristic notification flag
 static bool notify_mysensor_enabled;
 
@@ -168,7 +164,7 @@ BT_GATT_SERVICE_DEFINE(
         // Characteristic Attribute write callback
         NULL,
         // Characteristic Attribute user data(TODO: modify)
-        button_state.serialized
+        NULL
     ),
 
     // BUTTON Client Characteristic Configuration Descriptor
