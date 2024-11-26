@@ -217,7 +217,7 @@ BT_GATT_SERVICE_DEFINE(
  * Functions
  */
 
-int lbs_init(struct lbs_cb *callbacks)
+int lbs_init(const struct lbs_cb *callbacks)
 {
     lbs_cb = *callbacks;
 

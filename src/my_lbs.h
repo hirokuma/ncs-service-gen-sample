@@ -16,6 +16,15 @@ extern "C" {
 
 /*
  * UUID
+ *
+ *  LBS Service:
+ *      00001523-1212-efde-1523-785feabcd123
+ *  BUTTON Characteristic UUID:
+ *      00001524-1212-efde-1523-785feabcd123
+ *  LED Characteristic UUID:
+ *      00001525-1212-efde-1523-785feabcd123
+ *  MYSENSOR Characteristic UUID:
+ *      00001526-1212-efde-1523-785feabcd123
  */
 
 /// @brief LBS Service UUID
@@ -39,11 +48,11 @@ struct lbs_button_status {
 
 /// @brief Read callback type for BUTTON Characteristic.
 // TODO: Modifying parameters
-typedef int (*button_read_cb_t)(const void *data, uint16_t len, uint16_t offset, struct lbs_button_status *newState);
+typedef int (*lbs_button_read_cb_t)(const void *data, uint16_t len, uint16_t offset, struct lbs_button_status *newState);
 
 /// @brief Write callback type for LED Characteristic.
 // TODO: Modifying parameters
-typedef int (*led_write_cb_t)(const void *data, uint16_t len, uint16_t offset);
+typedef int (*lbs_led_write_cb_t)(const void *data, uint16_t len, uint16_t offset);
 
 
 /// @brief Read MYSENSOR Characteristic callback data
@@ -57,8 +66,8 @@ struct lbs_mysensor_status {
 
 /// @brief Callback struct used by the LBS Service.
 struct lbs_cb {
-    button_read_cb_t button_read_cb;
-    led_write_cb_t led_write_cb;
+    lbs_button_read_cb_t button_read_cb;
+    lbs_led_write_cb_t led_write_cb;
 };
 
 
@@ -67,7 +76,7 @@ struct lbs_cb {
  */
 
 /// @brief Initialize the LBS Service.
-int lbs_init(struct lbs_cb *callbacks);
+int lbs_init(const struct lbs_cb *callbacks);
 
 /// @brief lbs_send_button_indicate sends the value by indication through button characteristic.
 // TODO: Modifying parameters
